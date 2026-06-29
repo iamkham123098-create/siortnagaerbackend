@@ -6,6 +6,8 @@ from rest_framework_simplejwt.views import (
 )
 
 from .views import (
+    # Health check
+    HealthCheckView,
     # Public views
     HomePagePublicView,
     OfficeBearerPublicListView,
@@ -41,6 +43,7 @@ admin_router.register(r"contact", ContactInfoAdminViewSet, basename="admin-conta
 
 # Public URL patterns
 public_urlpatterns = [
+    path("health/", HealthCheckView.as_view(), name="health-check"),
     path("home/", HomePagePublicView.as_view(), name="public-home"),
     path("about/office-bearers/", OfficeBearerPublicListView.as_view(), name="public-office-bearers"),
     path("activities/", ActivityPublicListView.as_view(), name="public-activities"),

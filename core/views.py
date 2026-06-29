@@ -29,6 +29,16 @@ from .serializers import (
 from .permissions import IsAdminUser, IsAdminUserOrReadOnly
 
 
+# ==================== HEALTH CHECK ====================
+
+class HealthCheckView(generics.GenericAPIView):
+    """Simple health check endpoint."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        return Response({"status": "okay"}, status=status.HTTP_200_OK)
+
+
 # ==================== PUBLIC VIEWS (Read-only) ====================
 
 class HomePagePublicView(generics.RetrieveAPIView):
