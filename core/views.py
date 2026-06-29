@@ -132,6 +132,23 @@ class EventPublicDetailView(generics.RetrieveAPIView):
         return Event.objects.filter(is_active=True)
 
 
+class UpdateEventStatusPublicView(generics.GenericAPIView):
+    """Public endpoint to trigger a bulk update of event types.
+
+    This is intentionally `AllowAny` so it can be invoked by an external
+    cron job (or any HTTP client) to keep `event_type` in sync with
+    `event_date` when time passes.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        result = Event.update_event_types()
+        return Response({
+            "detail": "Event types updated",
+            "updated": result
+        }, status=status.HTTP_200_OK)
+
+
 class AnnouncementPublicListView(generics.ListAPIView):
     """Public view for announcements list with date filtering."""
     serializer_class = AnnouncementPublicSerializer

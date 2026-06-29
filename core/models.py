@@ -130,6 +130,53 @@ class Event(BaseModel):
 
     def __str__(self):
         return f"{self.title} - {self.event_date.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        """Ensure `event_type` reflects the `event_date` at save time.
+
+        - If the event date is in the past, mark as `PAST`.
+        - If the event date is now or in the future, mark as `UPCOMING`.
+        This keeps the type consistent when events are created/edited.
+        """
+        from django.utils import timezone
+
+        now = timezone.now()
+        if self.event_date:
+            if self.event_date < now:
+                self.event_type = EventType.PAST
+            else:
+                self.event_type = EventType.UPCOMING
+
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def update_event_types(cls):
+        """Bulk update event_type for events based on current time.
+
+        Returns a dict with counts of updated records:
+        {
+            'to_past': <int>,   # UPCOMING -> PAST
+            'to_upcoming': <int> # PAST -> UPCOMING (if any)
+        }
+        This method is intended to be called from a scheduled job or a
+        public endpoint that a cron job can hit.
+        """
+        from django.utils import timezone
+
+        now = timezone.now()
+        to_past = cls.objects.filter(
+            is_active=True,
+            event_type=EventType.UPCOMING,
+            event_date__lt=now
+        ).update(event_type=EventType.PAST)
+
+        to_upcoming = cls.objects.filter(
+            is_active=True,
+            event_type=EventType.PAST,
+            event_date__gte=now
+        ).update(event_type=EventType.UPCOMING)
+
+        return {"to_past": to_past, "to_upcoming": to_upcoming}
 
 
 class EventPhoto(BaseModel):
